@@ -19,7 +19,7 @@ COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
-COPY sentiment_app ./sentiment_app
+COPY lab11/sentiment_app ./sentiment_app
 
 # Copy ONNX model + tokenizer files
 COPY model ./model

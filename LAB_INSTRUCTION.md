@@ -85,7 +85,7 @@ develop their parts independently while relying on automated processes for repea
 tasks. It ensures reproducibility throughout the cycle and enables continuous shipping
 of new model versions into production.
 
-![CI_CD](images/ci_cd_img.png)
+![CI_CD](lab11/images/ci_cd_img.png)
 
 Source: [DataCamp](https://www.datacamp.com/tutorial/ci-cd-for-machine-learning)
 
@@ -143,9 +143,9 @@ jobs:
 
 4. Commit **and push** the changes to GitHub (`git add .github/workflows/hello_world.yaml && git commit -m "Add hello world workflow" && git push`). GitHub only sees workflow files that exist on the remote - a local commit is not enough; without `git push` the workflow will not appear in the Actions UI.
 5. Navigate to GitHub -> your repository -> Actions -> All workflows -> Hello World workflow
-   ![actions](images/actions.png)
+   ![actions](lab11/images/actions.png)
 6. Click on `Run workflow` button and trigger job.
-   ![workflow dispatch](images/workflow_dispatch.png)
+   ![workflow dispatch](lab11/images/workflow_dispatch.png)
 7. Refresh the page and navigate to executed job. When you click on rectangle with step name,
    you will see list of steps and their statuses. You can also inspect logs printed by each step.
 8. Document your result, e.g. by screenshot with `Hello World` printed.
@@ -464,7 +464,7 @@ FROM python:3.12-slim-bookworm
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
-COPY sentiment_app ./sentiment_app
+COPY lab11/sentiment_app ./sentiment_app
 COPY model ./model
 
 ENTRYPOINT ["python", "-m", "awslambdaric"]
