@@ -9,7 +9,7 @@ env:
 
 defaults:
  run:
-   working-directory: ..
+   working-directory: lab11/
 
 jobs:
  integration:
