@@ -85,7 +85,7 @@ develop their parts independently while relying on automated processes for repea
 tasks. It ensures reproducibility throughout the cycle and enables continuous shipping
 of new model versions into production.
 
-![CI_CD](lab11/images/ci_cd_img.png)
+![CI_CD](images/ci_cd_img.png)
 
 Source: [DataCamp](https://www.datacamp.com/tutorial/ci-cd-for-machine-learning)
 
@@ -143,9 +143,9 @@ jobs:
 
 4. Commit **and push** the changes to GitHub (`git add .github/workflows/hello_world.yaml && git commit -m "Add hello world workflow" && git push`). GitHub only sees workflow files that exist on the remote - a local commit is not enough; without `git push` the workflow will not appear in the Actions UI.
 5. Navigate to GitHub -> your repository -> Actions -> All workflows -> Hello World workflow
-   ![actions](lab11/images/actions.png)
+   ![actions](images/actions.png)
 6. Click on `Run workflow` button and trigger job.
-   ![workflow dispatch](lab11/images/workflow_dispatch.png)
+   ![workflow dispatch](images/workflow_dispatch.png)
 7. Refresh the page and navigate to executed job. When you click on rectangle with step name,
    you will see list of steps and their statuses. You can also inspect logs printed by each step.
 8. Document your result, e.g. by screenshot with `Hello World` printed.
@@ -378,20 +378,20 @@ from scripts.settings import Settings
 
 
 def prepare_model_from_hf(settings: Settings) -> None:
-    target_dir = Path(settings.local_model_dir)
-    target_dir.mkdir(parents=True, exist_ok=True)
+   target_dir = Path(settings.local_model_dir)
+   target_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Downloading {settings.hf_model_id} into {target_dir}...")
-    tokenizer = AutoTokenizer.from_pretrained(settings.hf_model_id, use_fast=True)
-    model = AutoModelForSequenceClassification.from_pretrained(settings.hf_model_id)
+   print(f"Downloading {settings.hf_model_id} into {target_dir}...")
+   tokenizer = AutoTokenizer.from_pretrained(settings.hf_model_id, use_fast=True)
+   model = AutoModelForSequenceClassification.from_pretrained(settings.hf_model_id)
 
-    tokenizer.save_pretrained(str(target_dir))
-    model.save_pretrained(str(target_dir))
-    print(f"Saved tokenizer and model to {target_dir}")
+   tokenizer.save_pretrained(str(target_dir))
+   model.save_pretrained(str(target_dir))
+   print(f"Saved tokenizer and model to {target_dir}")
 
 
 if __name__ == "__main__":
-    prepare_model_from_hf(Settings())
+   prepare_model_from_hf(Settings())
 ```
 
 2. **Read `lab11/src/scripts/export_zeroshot_to_onnx.py`.** Loads the local model, runs `torch.onnx.export` with dynamic axes for `(batch_size, sequence)`, copies `tokenizer.json` next to the ONNX file so the runtime can use `tokenizers.Tokenizer.from_file` (no `transformers` dependency at inference time).
@@ -407,48 +407,48 @@ from scripts.settings import Settings
 
 
 def export_zeroshot_to_onnx(settings: Settings) -> Path:
-    src_dir = Path(settings.local_model_dir)
-    onnx_dir = Path(settings.onnx_dir)
-    onnx_dir.mkdir(parents=True, exist_ok=True)
+   src_dir = Path(settings.local_model_dir)
+   onnx_dir = Path(settings.onnx_dir)
+   onnx_dir.mkdir(parents=True, exist_ok=True)
 
-    tokenizer = AutoTokenizer.from_pretrained(str(src_dir), use_fast=True)
-    model = AutoModelForSequenceClassification.from_pretrained(str(src_dir))
-    model.eval()
+   tokenizer = AutoTokenizer.from_pretrained(str(src_dir), use_fast=True)
+   model = AutoModelForSequenceClassification.from_pretrained(str(src_dir))
+   model.eval()
 
-    dummy_text = "This lab is great."
-    dummy_hypothesis = "This text expresses positive sentiment."
-    inputs = tokenizer(dummy_text, dummy_hypothesis, return_tensors="pt")
+   dummy_text = "This lab is great."
+   dummy_hypothesis = "This text expresses positive sentiment."
+   inputs = tokenizer(dummy_text, dummy_hypothesis, return_tensors="pt")
 
-    onnx_path = Path(settings.onnx_model_path)
-    print(f"Exporting model to {onnx_path}...")
-    with torch.no_grad():
-        torch.onnx.export(
-            model,
-            (inputs["input_ids"], inputs["attention_mask"]),
-            str(onnx_path),
-            input_names=["input_ids", "attention_mask"],
-            output_names=["logits"],
-            dynamic_axes={
-                "input_ids": {0: "batch_size", 1: "sequence"},
-                "attention_mask": {0: "batch_size", 1: "sequence"},
-                "logits": {0: "batch_size"},
-            },
-            opset_version=18,
-            dynamo=False,
-        )
+   onnx_path = Path(settings.onnx_model_path)
+   print(f"Exporting model to {onnx_path}...")
+   with torch.no_grad():
+      torch.onnx.export(
+         model,
+         (inputs["input_ids"], inputs["attention_mask"]),
+         str(onnx_path),
+         input_names=["input_ids", "attention_mask"],
+         output_names=["logits"],
+         dynamic_axes={
+            "input_ids": {0: "batch_size", 1: "sequence"},
+            "attention_mask": {0: "batch_size", 1: "sequence"},
+            "logits": {0: "batch_size"},
+         },
+         opset_version=18,
+         dynamo=False,
+      )
 
-    src_tokenizer = src_dir / "tokenizer.json"
-    if not src_tokenizer.exists():
-        tokenizer.save_pretrained(str(onnx_dir))
-    else:
-        shutil.copy2(src_tokenizer, Path(settings.tokenizer_path))
+   src_tokenizer = src_dir / "tokenizer.json"
+   if not src_tokenizer.exists():
+      tokenizer.save_pretrained(str(onnx_dir))
+   else:
+      shutil.copy2(src_tokenizer, Path(settings.tokenizer_path))
 
-    print(f"ONNX model and tokenizer exported to {onnx_dir}")
-    return onnx_path
+   print(f"ONNX model and tokenizer exported to {onnx_dir}")
+   return onnx_path
 
 
 if __name__ == "__main__":
-    export_zeroshot_to_onnx(Settings())
+   export_zeroshot_to_onnx(Settings())
 ```
 
 3. **Read `lab11/Dockerfile`.** Multi-stage uv build. Copies the inference venv, the FastAPI app, and the `model/` folder produced by the scripts above. Lambda runtime is `awslambdaric` with the dotted-path handler `sentiment_app.app.handler`.
@@ -464,7 +464,7 @@ FROM python:3.12-slim-bookworm
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
-COPY lab11/sentiment_app ./sentiment_app
+COPY sentiment_app ./sentiment_app
 COPY model ./model
 
 ENTRYPOINT ["python", "-m", "awslambdaric"]
