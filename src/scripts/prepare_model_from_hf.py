@@ -2,7 +2,7 @@ from pathlib import Path
 
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from scripts.settings import Settings
+from src.scripts.settings import Settings
 
 
 def prepare_model_from_hf(settings: Settings) -> None:
