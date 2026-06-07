@@ -9,7 +9,7 @@ env:
 
 defaults:
  run:
-   working-directory: ML_ops_lab_11/lab11
+   working-directory: ..
 
 jobs:
  integration:
