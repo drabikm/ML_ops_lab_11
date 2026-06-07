@@ -10,8 +10,8 @@ jobs:
   hello-world-job:
     # our job definition
     runs-on: ... # here, define image on which we will run our job
-
+      - ubuntu-latest
     # definitions of all job steps
     steps:
       - name: Print Hello World # step name, displayed on UI
-        run: print "Hello World"
+        run: echo "Hello World"
