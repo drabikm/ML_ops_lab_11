@@ -16,18 +16,24 @@ jobs:
    name: checks_and_tests
    runs-on: ubuntu-latest
    steps:
-     - name: Checkout code repo
+      - name: Show run info
+        run: |
+          echo "SHA: ${{ github.sha }}"
+          echo "Run ID: ${{ github.run_id }}"
+      - name: Show region
+        run: echo "Deploying to ${{ env.AWS_REGION }}"
+      - name: Checkout code repo
        # given: checks out your repository code so the workflow can access it
-       uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
-     - name: Setup uv
-       uses: astral-sh/setup-uv@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
 
-     - name: Install dependencies
-       run: uv sync --group integration
+      - name: Install dependencies
+        run: uv sync --group integration
        # TODO: sync ONLY the `integration` group dependencies
-     - name: Run ruff check
-       run: uv run ruff check .
-     - name: Run tests
-       run: uv run pytest tests/ -v
+      - name: Run ruff check
+        run: uv run ruff check .
+      - name: Run tests
+        run: uv run pytest tests/ -v
      # TODO: add steps for 'ruff check' and 'pytest tests/'
