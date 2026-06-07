@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from src.scripts.settings import Settings
+from scripts.settings import Settings
 
 
 def export_zeroshot_to_onnx(settings: Settings) -> Path:

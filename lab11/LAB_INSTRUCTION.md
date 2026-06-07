@@ -374,24 +374,24 @@ from pathlib import Path
 
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from src.scripts.settings import Settings
+from scripts.settings import Settings
 
 
 def prepare_model_from_hf(settings: Settings) -> None:
-   target_dir = Path(settings.local_model_dir)
-   target_dir.mkdir(parents=True, exist_ok=True)
+    target_dir = Path(settings.local_model_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
 
-   print(f"Downloading {settings.hf_model_id} into {target_dir}...")
-   tokenizer = AutoTokenizer.from_pretrained(settings.hf_model_id, use_fast=True)
-   model = AutoModelForSequenceClassification.from_pretrained(settings.hf_model_id)
+    print(f"Downloading {settings.hf_model_id} into {target_dir}...")
+    tokenizer = AutoTokenizer.from_pretrained(settings.hf_model_id, use_fast=True)
+    model = AutoModelForSequenceClassification.from_pretrained(settings.hf_model_id)
 
-   tokenizer.save_pretrained(str(target_dir))
-   model.save_pretrained(str(target_dir))
-   print(f"Saved tokenizer and model to {target_dir}")
+    tokenizer.save_pretrained(str(target_dir))
+    model.save_pretrained(str(target_dir))
+    print(f"Saved tokenizer and model to {target_dir}")
 
 
 if __name__ == "__main__":
-   prepare_model_from_hf(Settings())
+    prepare_model_from_hf(Settings())
 ```
 
 2. **Read `lab11/src/scripts/export_zeroshot_to_onnx.py`.** Loads the local model, runs `torch.onnx.export` with dynamic axes for `(batch_size, sequence)`, copies `tokenizer.json` next to the ONNX file so the runtime can use `tokenizers.Tokenizer.from_file` (no `transformers` dependency at inference time).
@@ -403,52 +403,52 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from src.scripts.settings import Settings
+from scripts.settings import Settings
 
 
 def export_zeroshot_to_onnx(settings: Settings) -> Path:
-   src_dir = Path(settings.local_model_dir)
-   onnx_dir = Path(settings.onnx_dir)
-   onnx_dir.mkdir(parents=True, exist_ok=True)
+    src_dir = Path(settings.local_model_dir)
+    onnx_dir = Path(settings.onnx_dir)
+    onnx_dir.mkdir(parents=True, exist_ok=True)
 
-   tokenizer = AutoTokenizer.from_pretrained(str(src_dir), use_fast=True)
-   model = AutoModelForSequenceClassification.from_pretrained(str(src_dir))
-   model.eval()
+    tokenizer = AutoTokenizer.from_pretrained(str(src_dir), use_fast=True)
+    model = AutoModelForSequenceClassification.from_pretrained(str(src_dir))
+    model.eval()
 
-   dummy_text = "This lab is great."
-   dummy_hypothesis = "This text expresses positive sentiment."
-   inputs = tokenizer(dummy_text, dummy_hypothesis, return_tensors="pt")
+    dummy_text = "This lab is great."
+    dummy_hypothesis = "This text expresses positive sentiment."
+    inputs = tokenizer(dummy_text, dummy_hypothesis, return_tensors="pt")
 
-   onnx_path = Path(settings.onnx_model_path)
-   print(f"Exporting model to {onnx_path}...")
-   with torch.no_grad():
-       torch.onnx.export(
-           model,
-           (inputs["input_ids"], inputs["attention_mask"]),
-           str(onnx_path),
-           input_names=["input_ids", "attention_mask"],
-           output_names=["logits"],
-           dynamic_axes={
-               "input_ids": {0: "batch_size", 1: "sequence"},
-               "attention_mask": {0: "batch_size", 1: "sequence"},
-               "logits": {0: "batch_size"},
-           },
-           opset_version=18,
-           dynamo=False,
-       )
+    onnx_path = Path(settings.onnx_model_path)
+    print(f"Exporting model to {onnx_path}...")
+    with torch.no_grad():
+        torch.onnx.export(
+            model,
+            (inputs["input_ids"], inputs["attention_mask"]),
+            str(onnx_path),
+            input_names=["input_ids", "attention_mask"],
+            output_names=["logits"],
+            dynamic_axes={
+                "input_ids": {0: "batch_size", 1: "sequence"},
+                "attention_mask": {0: "batch_size", 1: "sequence"},
+                "logits": {0: "batch_size"},
+            },
+            opset_version=18,
+            dynamo=False,
+        )
 
-   src_tokenizer = src_dir / "tokenizer.json"
-   if not src_tokenizer.exists():
-       tokenizer.save_pretrained(str(onnx_dir))
-   else:
-       shutil.copy2(src_tokenizer, Path(settings.tokenizer_path))
+    src_tokenizer = src_dir / "tokenizer.json"
+    if not src_tokenizer.exists():
+        tokenizer.save_pretrained(str(onnx_dir))
+    else:
+        shutil.copy2(src_tokenizer, Path(settings.tokenizer_path))
 
-   print(f"ONNX model and tokenizer exported to {onnx_dir}")
-   return onnx_path
+    print(f"ONNX model and tokenizer exported to {onnx_dir}")
+    return onnx_path
 
 
 if __name__ == "__main__":
-   export_zeroshot_to_onnx(Settings())
+    export_zeroshot_to_onnx(Settings())
 ```
 
 3. **Read `lab11/Dockerfile`.** Multi-stage uv build. Copies the inference venv, the FastAPI app, and the `model/` folder produced by the scripts above. Lambda runtime is `awslambdaric` with the dotted-path handler `sentiment_app.app.handler`.
